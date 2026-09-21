@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EcoCondomínio IA — Coleta inteligente</title>
+  <meta name="description" content="MVP acadêmico de monitoramento e otimização da coleta de resíduos em condomínios." />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230b1320'/%3E%3Cpath d='M8 19c7 1 12-3 16-10 1 9-3 16-11 16-3 0-5-2-5-6Z' fill='%237ce38b'/%3E%3Cpath d='M10 23c3-5 7-8 12-11' stroke='%23fff' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <style>
+    :root{--ink:#0b1320;--muted:#657082;--paper:#f4f7f8;--card:#fff;--line:#dfe7e9;--lime:#7ce38b;--green:#168b66;--cyan:#43c7d9;--amber:#f5b941;--red:#ef6a6a;--nav:#0b1822;--shadow:0 16px 40px rgba(11,24,34,.09)}
+    *{box-sizing:border-box} body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+    button,select{font:inherit} button{cursor:pointer} .app{min-height:100vh;display:grid;grid-template-columns:232px 1fr}
+    aside{background:var(--nav);color:#dce8e7;padding:26px 18px;display:flex;flex-direction:column;gap:28px;position:sticky;top:0;height:100vh}
+    .brand{display:flex;align-items:center;gap:11px;font-weight:800;color:#fff;font-size:18px}.brand-mark{width:36px;height:36px;border-radius:11px;background:var(--lime);display:grid;place-items:center;color:var(--ink);font-size:20px}.brand small{display:block;font-size:11px;font-weight:600;letter-spacing:.12em;color:#89a0a1;text-transform:uppercase}
+    nav{display:grid;gap:7px}.nav-btn{border:0;background:transparent;color:#9fb0b2;padding:11px 12px;text-align:left;border-radius:10px;display:flex;gap:10px;align-items:center}.nav-btn.active,.nav-btn:hover{background:#172936;color:#fff}.nav-btn.active{box-shadow:inset 3px 0 var(--lime)}
+    .demo-note{margin-top:auto;border:1px solid #29404a;background:#122530;border-radius:14px;padding:13px;color:#a9bbbd;font-size:12px}.demo-note strong{color:var(--lime);display:block;margin-bottom:3px}
+    main{padding:26px 34px 40px;min-width:0}.topbar{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:24px}.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--green);font-weight:800}.topbar h1{font-size:26px;margin:3px 0 0;letter-spacing:-.04em}.top-actions{display:flex;align-items:center;gap:10px}.live{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:14px}.dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 0 5px rgba(22,139,102,.12)}
+    .select{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 12px;color:var(--ink)}
+    .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:17px;box-shadow:0 6px 20px rgba(11,24,34,.03)}.kpi-label{display:flex;justify-content:space-between;color:var(--muted);font-size:13px}.kpi strong{display:block;font-size:29px;letter-spacing:-.05em;margin:7px 0 2px}.delta{font-size:12px;color:var(--green)}.delta.warn{color:#b47709}
+    .grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(310px,.8fr);gap:16px;margin-top:16px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:var(--shadow)}.card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:18px}.card h2{font-size:17px;margin:0}.sub{color:var(--muted);font-size:13px;margin-top:3px}.tag{font-size:12px;border-radius:999px;padding:6px 9px;background:#ecf8f1;color:var(--green);font-weight:700}
+    .chart{height:210px;display:flex;align-items:flex-end;gap:14px;padding:12px 4px 0;border-bottom:1px solid var(--line);background:repeating-linear-gradient(to top,transparent 0,transparent 51px,#edf2f3 52px)}.bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:7px}.bar{width:min(34px,70%);border-radius:8px 8px 2px 2px;background:linear-gradient(180deg,var(--lime),var(--green));min-height:12px;transition:.35s}.bar-label{font-size:12px;color:var(--muted)}
+    .alerts{display:grid;gap:10px}.alert{display:grid;grid-template-columns:auto 1fr auto;gap:11px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:13px}.alert-icon{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:#fff4de}.alert strong{font-size:14px;display:block}.alert small{color:var(--muted)}.level{font-size:12px;font-weight:800;color:#a96d00}.level.red{color:#c84242}.alert.danger .alert-icon{background:#ffebeb}
+    .route{margin-top:16px;display:flex;justify-content:space-between;align-items:center;background:var(--ink);color:#fff;border-radius:16px;padding:16px 18px}.route p{margin:2px 0 0;color:#aebbc4;font-size:13px}.route button{border:0;border-radius:10px;background:var(--lime);color:var(--ink);padding:10px 13px;font-weight:800}.route button:focus-visible,.nav-btn:focus-visible,.select:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+    .hidden{display:none!important}.presentation{max-width:920px}.story{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}.story .card{min-height:170px}.story h3{margin:0 0 8px;font-size:16px}.story p,.story li{color:#526071}.story ul{padding-left:20px;margin:8px 0}.steps{counter-reset:step;display:grid;gap:10px}.step{display:grid;grid-template-columns:34px 1fr;gap:11px;align-items:start}.step:before{counter-increment:step;content:counter(step);width:30px;height:30px;border-radius:9px;background:var(--ink);color:var(--lime);display:grid;place-items:center;font-weight:800}.step strong{display:block}.step span{color:var(--muted);font-size:14px}
+    .toast{position:fixed;right:24px;bottom:24px;background:#fff;border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;padding:14px 17px;max-width:330px;transform:translateY(120px);opacity:0;transition:.3s}.toast.show{transform:none;opacity:1}
+    @media(max-width:980px){.app{grid-template-columns:76px 1fr}aside{padding:22px 12px}.brand span,.nav-btn span,.demo-note{display:none}.brand{justify-content:center}.nav-btn{justify-content:center;font-size:20px}.kpis{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}}
+    @media(max-width:650px){.app{display:block}aside{position:static;height:auto;display:flex;flex-direction:row;padding:12px 16px;align-items:center}.brand{margin-right:auto}.brand span{display:block}.brand small{display:none}nav{display:flex}.nav-btn{padding:9px}.nav-btn span{display:none}main{padding:20px 15px 90px}.topbar{align-items:flex-start}.top-actions{flex-direction:column;align-items:flex-end}.live{font-size:12px}.kpis{grid-template-columns:1fr 1fr;gap:9px}.kpi{padding:14px}.kpi strong{font-size:24px}.grid{display:block}.grid>.card{margin-bottom:14px}.chart{gap:6px}.bar-label{font-size:10px}.story{grid-template-columns:1fr}.route{align-items:flex-start;gap:12px;flex-direction:column}.toast{left:15px;right:15px}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside>
+      <div class="brand"><div class="brand-mark">♻</div><span>EcoCondomínio<small>inteligência ambiental</small></span></div>
+      <nav aria-label="Navegação principal">
+        <button class="nav-btn active" data-view="dashboard" aria-current="page">◫ <span>Dashboard</span></button>
+        <button class="nav-btn" data-view="projeto">◎ <span>Como funciona</span></button>
+      </nav>
+      <div class="demo-note"><strong>Protótipo acadêmico</strong>Todos os dados exibidos são fictícios e servem para demonstrar o MVP.</div>
+    </aside>
+    <main>
+      <section id="dashboard">
+        <header class="topbar">
+          <div><div class="eyebrow">Condomínio Parque das Águas</div><h1>Operação de coleta</h1></div>
+          <div class="top-actions"><span class="live"><i class="dot"></i> sensores online</span><select class="select" id="period" aria-label="Período"><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option></select></div>
+        </header>
+        <div class="kpis">
+          <article class="kpi"><div class="kpi-label"><span>Volume coletado</span><span>♻</span></div><strong id="volume">1.284 kg</strong><span class="delta">↑ 12% vs. período anterior</span></article>
+          <article class="kpi"><div class="kpi-label"><span>Reciclagem</span><span>◌</span></div><strong id="recycle">68%</strong><span class="delta">↑ 7 pontos percentuais</span></article>
+          <article class="kpi"><div class="kpi-label"><span>Economia estimada</span><span>R$</span></div><strong id="saving">R$ 2.460</strong><span class="delta">menos viagens desnecessárias</span></article>
+          <article class="kpi"><div class="kpi-label"><span>Alertas ativos</span><span>!</span></div><strong id="alerts">3</strong><span class="delta warn">2 precisam de atenção</span></article>
+        </div>
+        <div class="grid">
+          <article class="card">
+            <div class="card-head"><div><h2>Geração de resíduos</h2><div class="sub" id="chart-sub">Quilos coletados nos últimos 7 dias</div></div><span class="tag">Previsão IA: estável</span></div>
+            <div class="chart" id="chart" aria-label="Gráfico de barras de resíduos por dia"></div>
+            <div class="route"><div><strong>Rota inteligente pronta</strong><p>A IA priorizou 3 pontos e reduziu o trajeto estimado em 6,8 km.</p></div><button id="routeBtn">Ver recomendação</button></div>
+          </article>
+          <article class="card">
+            <div class="card-head"><div><h2>Pontos que exigem atenção</h2><div class="sub">Leituras simuladas em tempo real</div></div><span class="tag">3 de 12</span></div>
+            <div class="alerts">
+              <div class="alert danger"><div class="alert-icon">●</div><div><strong>Torre B · Orgânico</strong><small>Capacidade em 94%</small></div><span class="level red">Crítico</span></div>
+              <div class="alert"><div class="alert-icon">●</div><div><strong>Garagem · Recicláveis</strong><small>Capacidade em 82%</small></div><span class="level">Alto</span></div>
+              <div class="alert"><div class="alert-icon">●</div><div><strong>Área gourmet · Vidro</strong><small>Padrão incomum detectado</small></div><span class="level">Revisar</span></div>
+            </div>
+          </article>
+        </div>
+      </section>
+      <section id="projeto" class="presentation hidden">
+        <header class="topbar"><div><div class="eyebrow">Visão para apresentação</div><h1>Como o MVP funciona</h1></div></header>
+        <div class="story">
+          <article class="card"><h3>O problema</h3><p>Coletas em horários fixos ignoram o volume real das lixeiras. O resultado são recipientes transbordando, viagens vazias e custos maiores.</p></article>
+          <article class="card"><h3>A solução</h3><p>Sensores estimam o nível de enchimento. A IA prevê demanda e sugere a melhor rota para a equipe do condomínio.</p></article>
+          <article class="card"><h3>Fluxo do sistema</h3><div class="steps"><div class="step"><div><strong>Medir</strong><span>Sensores enviam o nível de cada ponto.</span></div></div><div class="step"><div><strong>Prever</strong><span>A IA antecipa quando haverá lotação.</span></div></div><div class="step"><div><strong>Agir</strong><span>O dashboard prioriza a coleta.</span></div></div></div></article>
+          <article class="card"><h3>Valor gerado</h3><ul><li>Menos transbordamentos e odores</li><li>Redução de quilômetros e combustível</li><li>Mais reciclagem e dados para decisões</li><li>Operação simples para síndico e zeladoria</li></ul></article>
+        </div>
+      </section>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"><strong>Recomendação da IA</strong><br>Torre B → Garagem → Área gourmet. Saída sugerida: 14h30.</div>
+  <script>
+    const datasets={7:{labels:['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'],values:[58,71,64,82,76,96,88],volume:'1.284 kg',recycle:'68%',saving:'R$ 2.460'},30:{labels:['Sem 1','Sem 2','Sem 3','Sem 4'],values:[73,81,76,91],volume:'5.730 kg',recycle:'65%',saving:'R$ 9.180'}};
+    function render(period){const d=datasets[period],chart=document.querySelector('#chart');chart.innerHTML='';d.values.forEach((v,i)=>{const w=document.createElement('div');w.className='bar-wrap';w.innerHTML=`<div class="bar" style="height:${v}%" title="${v} kg"></div><span class="bar-label">${d.labels[i]}</span>`;chart.appendChild(w)});document.querySelector('#volume').textContent=d.volume;document.querySelector('#recycle').textContent=d.recycle;document.querySelector('#saving').textContent=d.saving;document.querySelector('#chart-sub').textContent=period==='7'?'Quilos coletados nos últimos 7 dias':'Índice semanal dos últimos 30 dias'}
+    document.querySelector('#period').addEventListener('change',e=>render(e.target.value));render('7');
+    document.querySelectorAll('.nav-btn').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.nav-btn').forEach(x=>{x.classList.toggle('active',x===btn);x.removeAttribute('aria-current')});btn.setAttribute('aria-current','page');document.querySelectorAll('main>section').forEach(s=>s.classList.add('hidden'));document.querySelector('#'+btn.dataset.view).classList.remove('hidden')}));
+    document.querySelector('#routeBtn').addEventListener('click',()=>{const t=document.querySelector('#toast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),4200)});
+  </script>
+</body>
+</html>
