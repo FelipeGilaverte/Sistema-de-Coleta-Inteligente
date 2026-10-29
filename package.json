@@ -1,0 +1,14 @@
+{
+  "name": "ecocondominio-ia",
+  "version": "0.1.0",
+  "private": true,
+  "description": "POC acadêmica — marco de 29/10/2026",
+  "scripts": {
+    "test": "node --test tests/dashboard-model.test.js",
+    "test:ui": "node --test tests/dashboard-ui.test.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  },
+  "engines": { "node": ">=20" }
+}

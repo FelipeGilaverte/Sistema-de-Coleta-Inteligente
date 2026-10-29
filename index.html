@@ -9,7 +9,7 @@
   <style>
     :root{--ink:#0b1320;--muted:#657082;--paper:#f4f7f8;--card:#fff;--line:#dfe7e9;--lime:#7ce38b;--green:#168b66;--cyan:#43c7d9;--amber:#f5b941;--red:#ef6a6a;--nav:#0b1822;--shadow:0 16px 40px rgba(11,24,34,.09)}
     *{box-sizing:border-box} body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
-    button,select{font:inherit} button{cursor:pointer} .app{min-height:100vh;display:grid;grid-template-columns:232px 1fr}
+    button,select,input{font:inherit} button{cursor:pointer} .app{min-height:100vh;display:grid;grid-template-columns:232px 1fr}
     aside{background:var(--nav);color:#dce8e7;padding:26px 18px;display:flex;flex-direction:column;gap:28px;position:sticky;top:0;height:100vh}
     .brand{display:flex;align-items:center;gap:11px;font-weight:800;color:#fff;font-size:18px}.brand-mark{width:36px;height:36px;border-radius:11px;background:var(--lime);display:grid;place-items:center;color:var(--ink);font-size:20px}.brand small{display:block;font-size:11px;font-weight:600;letter-spacing:.12em;color:#89a0a1;text-transform:uppercase}
     nav{display:grid;gap:7px}.nav-btn{border:0;background:transparent;color:#9fb0b2;padding:11px 12px;text-align:left;border-radius:10px;display:flex;gap:10px;align-items:center}.nav-btn.active,.nav-btn:hover{background:#172936;color:#fff}.nav-btn.active{box-shadow:inset 3px 0 var(--lime)}
@@ -22,9 +22,17 @@
     .alerts{display:grid;gap:10px}.alert{display:grid;grid-template-columns:auto 1fr auto;gap:11px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:13px}.alert-icon{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:#fff4de}.alert strong{font-size:14px;display:block}.alert small{color:var(--muted)}.level{font-size:12px;font-weight:800;color:#a96d00}.level.red{color:#c84242}.alert.danger .alert-icon{background:#ffebeb}
     .route{margin-top:16px;display:flex;justify-content:space-between;align-items:center;background:var(--ink);color:#fff;border-radius:16px;padding:16px 18px}.route p{margin:2px 0 0;color:#aebbc4;font-size:13px}.route button{border:0;border-radius:10px;background:var(--lime);color:var(--ink);padding:10px 13px;font-weight:800}.route button:focus-visible,.nav-btn:focus-visible,.select:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
     .hidden{display:none!important}.presentation{max-width:920px}.story{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}.story .card{min-height:170px}.story h3{margin:0 0 8px;font-size:16px}.story p,.story li{color:#526071}.story ul{padding-left:20px;margin:8px 0}.steps{counter-reset:step;display:grid;gap:10px}.step{display:grid;grid-template-columns:34px 1fr;gap:11px;align-items:start}.step:before{counter-increment:step;content:counter(step);width:30px;height:30px;border-radius:9px;background:var(--ink);color:var(--lime);display:grid;place-items:center;font-weight:800}.step strong{display:block}.step span{color:var(--muted);font-size:14px}
-    .toast{position:fixed;right:24px;bottom:24px;background:#fff;border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;padding:14px 17px;max-width:330px;transform:translateY(120px);opacity:0;transition:.3s}.toast.show{transform:none;opacity:1}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    .topbar>div,.card-head>div,.alert>div,.route>div{min-width:0}.topbar{flex-wrap:wrap}.alert{grid-template-columns:auto minmax(0,1fr) auto}.alert small{display:block}.tag{flex-shrink:0;max-width:120px}.route{gap:16px}.route button{flex-shrink:0;min-height:44px}.nav-btn{min-height:44px}.select{min-height:44px}
+    .chart-data{margin-top:12px;font-size:13px;color:var(--muted)}summary{cursor:pointer;min-height:32px;padding:4px 0}summary:focus-visible,dialog button:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}table{width:100%;border-collapse:collapse;margin-top:8px}caption{text-align:left;padding:5px 0}th,td{text-align:left;border-bottom:1px solid var(--line);padding:7px 5px}th:last-child,td:last-child{text-align:right}
+    dialog{border:1px solid var(--line);border-radius:18px;padding:24px;max-width:540px;width:calc(100% - 30px);max-height:85vh;color:var(--ink);box-shadow:var(--shadow)}dialog::backdrop{background:rgba(11,24,34,.5)}dialog h2{margin:0;font-size:21px}dialog ol{padding-left:24px}dialog li{padding:8px 0}dialog li small{display:block;color:var(--muted)}dialog button{border:0;border-radius:10px;background:var(--lime);padding:10px 18px;min-height:44px;font-weight:800}
+    .filters{display:flex;align-items:end;flex-wrap:wrap;gap:12px}.filters label{display:grid;gap:5px;font-size:13px;color:var(--muted);min-width:0}.filters input,.filters select{width:100%;min-width:0;max-width:100%}.filters .search{flex:1 1 210px}.btn{min-height:44px;border:1px solid var(--line);border-radius:10px;padding:9px 14px;background:#fff;color:var(--ink)}.btn.primary{background:var(--lime);border-color:var(--lime);font-weight:800}.btn:disabled{opacity:.6;cursor:default}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}.period-editor{margin-bottom:20px;padding:16px;box-shadow:none}.period-editor p{margin:0 0 12px}.period-editor .error{color:#b23636;margin:10px 0 0;font-size:13px}
+    button.alert{width:100%;text-align:left;background:#fff;color:var(--ink)}button.alert:hover{border-color:var(--green);background:#f8fcfa}.alert-hint{font-size:12px;color:var(--green);margin:12px 0 0}.explorer{margin-top:20px}.explorer .card-head{flex-wrap:wrap}.bin-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:18px}.bin-card{text-align:left;border:1px solid var(--line);background:#fff;border-radius:14px;padding:16px;min-width:0;color:var(--ink);transition:border-color .15s,background .15s}.bin-card:hover{background:#f8fcfa;border-color:var(--green)}.bin-top{display:flex;justify-content:space-between;align-items:start;gap:8px}.bin-top strong{font-size:14px;min-width:0}.bin-card .tag{padding:3px 7px;font-size:11px}.status-critical{color:#b53232;background:#ffeded}.status-high,.status-review{color:#926000;background:#fff4de}.bin-values{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:14px 0 8px}.bin-values strong{font-size:23px;letter-spacing:-.04em}.bin-values small{font-size:12px;color:var(--muted)}.meter{height:7px;border-radius:6px;overflow:hidden;background:#edf2f3}.meter>span{display:block;height:100%;background:var(--green);border-radius:6px}.meter.critical>span{background:var(--red)}.meter.high>span{background:var(--amber)}.bin-foot{display:flex;justify-content:space-between;gap:8px;margin-top:9px;font-size:12px;color:var(--muted)}.bin-foot span:last-child{color:var(--green)}.empty{grid-column:1/-1;padding:24px;border:1px dashed var(--line);border-radius:12px;text-align:center;color:var(--muted)}
+    .waste-mix{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}.mix-btn{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--paper);color:var(--ink);font-size:12px;min-height:44px}.mix-btn[aria-pressed=true]{background:#ecf8f1;border-color:var(--green)}.mix-btn span{color:var(--muted)}#point-dialog{max-width:720px}.detail-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:20px 0}.detail-kpis>div{background:var(--paper);border-radius:12px;padding:12px;min-width:0}.detail-kpis small{display:block;color:var(--muted)}.detail-kpis strong{font-size:23px;display:block;margin-top:4px}.point-alert{background:#f2f8f5;border-left:3px solid var(--green);padding:12px 15px;border-radius:0 10px 10px 0}.point-alert p{font-size:13px;margin:5px 0 0}.history-svg{width:100%;height:auto;display:block;margin:12px 0}.history-table{max-height:260px;overflow:auto;margin:12px 0 18px}.history-table table{font-size:13px}.history-table thead{position:sticky;top:0;background:#fff}.detail-heading{font-size:16px;margin:20px 0 4px}.point-footer{display:flex;justify-content:flex-end;margin-top:16px}
     @media(max-width:980px){.app{grid-template-columns:76px 1fr}aside{padding:22px 12px}.brand span,.nav-btn span,.demo-note{display:none}.brand{justify-content:center}.nav-btn{justify-content:center;font-size:20px}.kpis{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}}
     @media(max-width:650px){.app{display:block}aside{position:static;height:auto;display:flex;flex-direction:row;padding:12px 16px;align-items:center}.brand{margin-right:auto}.brand span{display:block}.brand small{display:none}nav{display:flex}.nav-btn{padding:9px}.nav-btn span{display:none}main{padding:20px 15px 90px}.topbar{align-items:flex-start}.top-actions{flex-direction:column;align-items:flex-end}.live{font-size:12px}.kpis{grid-template-columns:1fr 1fr;gap:9px}.kpi{padding:14px}.kpi strong{font-size:24px}.grid{display:block}.grid>.card{margin-bottom:14px}.chart{gap:6px}.bar-label{font-size:10px}.story{grid-template-columns:1fr}.route{align-items:flex-start;gap:12px;flex-direction:column}.toast{left:15px;right:15px}}
+    @media(max-width:1100px){.bin-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:650px){.bin-grid{grid-template-columns:1fr}.filters label{flex:1 1 140px}.filters .search{flex-basis:100%}.detail-kpis{grid-template-columns:1fr;gap:8px}.detail-kpis>div{display:flex;align-items:center;justify-content:space-between;gap:10px}.detail-kpis strong{margin:0;font-size:21px}dialog{padding:18px}.bin-foot{flex-wrap:wrap}.history-table th,.history-table td{padding:7px 3px}}
   </style>
 </head>
 <body>
@@ -32,57 +40,82 @@
     <aside>
       <div class="brand"><div class="brand-mark">♻</div><span>EcoCondomínio<small>inteligência ambiental</small></span></div>
       <nav aria-label="Navegação principal">
-        <button class="nav-btn active" data-view="dashboard" aria-current="page">◫ <span>Dashboard</span></button>
-        <button class="nav-btn" data-view="projeto">◎ <span>Como funciona</span></button>
+        <button class="nav-btn active" data-view="dashboard" aria-label="Dashboard" aria-current="page">◫ <span>Dashboard</span></button>
+        <button class="nav-btn" data-view="projeto" aria-label="Como funciona">◎ <span>Como funciona</span></button>
       </nav>
       <div class="demo-note"><strong>Protótipo acadêmico</strong>Todos os dados exibidos são fictícios e servem para demonstrar o MVP.</div>
     </aside>
     <main>
       <section id="dashboard">
         <header class="topbar">
-          <div><div class="eyebrow">Condomínio Parque das Águas</div><h1>Operação de coleta</h1></div>
-          <div class="top-actions"><span class="live"><i class="dot"></i> sensores online</span><select class="select" id="period" aria-label="Período"><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option></select></div>
+          <div><div class="eyebrow">Condomínio Parque das Águas</div><h1>Operação de coleta</h1><div class="sub" id="period-range"></div></div>
+          <div class="top-actions"><span class="live"><i class="dot" aria-hidden="true"></i> dados simulados</span><select class="select" id="period" aria-label="Período" aria-describedby="period-range"><option value="7">Últimos 7 dias</option><option value="14">Últimos 14 dias</option><option value="30">Últimos 30 dias</option><option value="custom">Personalizado</option></select></div>
         </header>
+        <form id="custom-period" class="card period-editor hidden" novalidate>
+          <p class="sub">Escolha as datas e aplique para atualizar o dashboard. Dados disponíveis de 31/08 a 29/10/2026.</p>
+          <div class="filters"><label>Data inicial<input class="select" type="date" id="start-date" min="2026-08-31" max="2026-10-29" required></label><label>Data final<input class="select" type="date" id="end-date" min="2026-08-31" max="2026-10-29" required></label><button class="btn primary" id="apply-period" type="submit">Aplicar período</button><button class="btn" id="cancel-period" type="button">Cancelar</button></div>
+          <p id="period-error" class="error" role="alert"></p>
+        </form>
         <div class="kpis">
-          <article class="kpi"><div class="kpi-label"><span>Volume coletado</span><span>♻</span></div><strong id="volume">1.284 kg</strong><span class="delta">↑ 12% vs. período anterior</span></article>
-          <article class="kpi"><div class="kpi-label"><span>Reciclagem</span><span>◌</span></div><strong id="recycle">68%</strong><span class="delta">↑ 7 pontos percentuais</span></article>
-          <article class="kpi"><div class="kpi-label"><span>Economia estimada</span><span>R$</span></div><strong id="saving">R$ 2.460</strong><span class="delta">menos viagens desnecessárias</span></article>
-          <article class="kpi"><div class="kpi-label"><span>Alertas ativos</span><span>!</span></div><strong id="alerts">3</strong><span class="delta warn">2 precisam de atenção</span></article>
+          <article class="kpi"><div class="kpi-label"><span>Volume coletado</span><span aria-hidden="true">♻</span></div><strong id="volume">—</strong><span class="delta" id="volume-delta"></span></article>
+          <article class="kpi"><div class="kpi-label"><span>Reciclagem</span><span aria-hidden="true">◌</span></div><strong id="recycle">—</strong><span class="delta" id="recycle-delta"></span></article>
+          <article class="kpi"><div class="kpi-label"><span>Economia estimada</span><span aria-hidden="true">R$</span></div><strong id="saving">—</strong><span class="delta" id="saving-detail"></span></article>
+          <article class="kpi"><div class="kpi-label"><span>Alertas ativos</span><span aria-hidden="true">!</span></div><strong id="alerts">—</strong><span class="delta warn" id="alert-summary"></span></article>
         </div>
         <div class="grid">
           <article class="card">
-            <div class="card-head"><div><h2>Geração de resíduos</h2><div class="sub" id="chart-sub">Quilos coletados nos últimos 7 dias</div></div><span class="tag">Previsão IA: estável</span></div>
-            <div class="chart" id="chart" aria-label="Gráfico de barras de resíduos por dia"></div>
-            <div class="route"><div><strong>Rota inteligente pronta</strong><p>A IA priorizou 3 pontos e reduziu o trajeto estimado em 6,8 km.</p></div><button id="routeBtn">Ver recomendação</button></div>
+            <div class="card-head"><div><h2>Geração de resíduos</h2><div class="sub" id="chart-sub"></div></div><span class="tag" id="trend"></span></div>
+            <div class="chart" id="chart" role="img" aria-describedby="chart-sub"></div>
+            <details class="chart-data"><summary>Consultar valores do gráfico</summary><table><caption id="chart-caption"></caption><thead><tr><th scope="col">Período</th><th scope="col">Coletado (kg)</th></tr></thead><tbody id="chart-table-body"></tbody></table></details>
+            <div class="route"><div><strong>Rota inteligente pronta</strong><p id="route-summary"></p></div><button id="routeBtn" aria-haspopup="dialog">Ver recomendação</button></div>
           </article>
           <article class="card">
-            <div class="card-head"><div><h2>Pontos que exigem atenção</h2><div class="sub">Leituras simuladas em tempo real</div></div><span class="tag">3 de 12</span></div>
-            <div class="alerts">
-              <div class="alert danger"><div class="alert-icon">●</div><div><strong>Torre B · Orgânico</strong><small>Capacidade em 94%</small></div><span class="level red">Crítico</span></div>
-              <div class="alert"><div class="alert-icon">●</div><div><strong>Garagem · Recicláveis</strong><small>Capacidade em 82%</small></div><span class="level">Alto</span></div>
-              <div class="alert"><div class="alert-icon">●</div><div><strong>Área gourmet · Vidro</strong><small>Padrão incomum detectado</small></div><span class="level">Revisar</span></div>
-            </div>
+            <div class="card-head"><div><h2>Pontos que exigem atenção</h2><div class="sub" id="alert-sub"></div></div><span class="tag" id="alert-count"></span></div>
+            <div class="alerts" id="alert-list"></div>
+            <p class="alert-hint">Selecione um alerta para ver o histórico da lixeira.</p>
           </article>
         </div>
+        <section class="card explorer" aria-labelledby="explorer-title">
+          <div class="card-head"><div><h2 id="explorer-title">Explore as lixeiras</h2><div class="sub" id="bins-context"></div></div><span class="tag" id="bin-count" role="status" aria-live="polite"></span></div>
+          <div class="filters">
+            <label class="search">Buscar lixeira<input class="select" id="bin-search" type="search" placeholder="Torre, garagem, área gourmet…"></label>
+            <label>Tipo de resíduo<select class="select" id="bin-type"><option value="all">Todos os tipos</option><option>Orgânico</option><option>Recicláveis</option><option>Vidro</option><option>Papel</option><option>Plástico</option></select></label>
+            <label>Situação<select class="select" id="bin-status"><option value="all">Todas as situações</option><option value="critical">Crítico</option><option value="high">Alto</option><option value="review">Revisar</option><option value="normal">Normal</option></select></label>
+            <button class="btn" id="reset-bins" type="button">Limpar filtros</button>
+          </div>
+          <div class="waste-mix" id="waste-mix" role="group" aria-label="Volume por tipo de resíduo; selecione para filtrar as lixeiras"></div>
+          <p class="sub">Os filtros abaixo afetam apenas a lista de lixeiras. Os indicadores acima mostram o condomínio inteiro.</p>
+          <div class="bin-grid" id="bin-list"></div>
+        </section>
       </section>
       <section id="projeto" class="presentation hidden">
         <header class="topbar"><div><div class="eyebrow">Visão para apresentação</div><h1>Como o MVP funciona</h1></div></header>
         <div class="story">
           <article class="card"><h3>O problema</h3><p>Coletas em horários fixos ignoram o volume real das lixeiras. O resultado são recipientes transbordando, viagens vazias e custos maiores.</p></article>
-          <article class="card"><h3>A solução</h3><p>Sensores estimam o nível de enchimento. A IA prevê demanda e sugere a melhor rota para a equipe do condomínio.</p></article>
-          <article class="card"><h3>Fluxo do sistema</h3><div class="steps"><div class="step"><div><strong>Medir</strong><span>Sensores enviam o nível de cada ponto.</span></div></div><div class="step"><div><strong>Prever</strong><span>A IA antecipa quando haverá lotação.</span></div></div><div class="step"><div><strong>Agir</strong><span>O dashboard prioriza a coleta.</span></div></div></div></article>
+          <article class="card"><h3>A solução</h3><p>Sensores estimariam o nível de enchimento. Nesta POC, dados simulados e regras demonstram a priorização da coleta. Não há sensores conectados nem modelo de IA em produção.</p></article>
+          <article class="card"><h3>Fluxo do sistema</h3><div class="steps"><div class="step"><div><strong>Medir</strong><span>Consultar leituras simuladas de 12 pontos.</span></div></div><div class="step"><div><strong>Analisar</strong><span>Ocupação a partir de 90% é crítica; a partir de 80% é alta. Padrões incomuns usam o histórico selecionado.</span></div></div><div class="step"><div><strong>Agir</strong><span>Atender pontos críticos, depois altos; verificar os padrões incomuns antes de coletar.</span></div></div></div></article>
           <article class="card"><h3>Valor gerado</h3><ul><li>Menos transbordamentos e odores</li><li>Redução de quilômetros e combustível</li><li>Mais reciclagem e dados para decisões</li><li>Operação simples para síndico e zeladoria</li></ul></article>
         </div>
       </section>
     </main>
   </div>
-  <div class="toast" id="toast" role="status" aria-live="polite"><strong>Recomendação da IA</strong><br>Torre B → Garagem → Área gourmet. Saída sugerida: 14h30.</div>
-  <script>
-    const datasets={7:{labels:['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'],values:[58,71,64,82,76,96,88],volume:'1.284 kg',recycle:'68%',saving:'R$ 2.460'},30:{labels:['Sem 1','Sem 2','Sem 3','Sem 4'],values:[73,81,76,91],volume:'5.730 kg',recycle:'65%',saving:'R$ 9.180'}};
-    function render(period){const d=datasets[period],chart=document.querySelector('#chart');chart.innerHTML='';d.values.forEach((v,i)=>{const w=document.createElement('div');w.className='bar-wrap';w.innerHTML=`<div class="bar" style="height:${v}%" title="${v} kg"></div><span class="bar-label">${d.labels[i]}</span>`;chart.appendChild(w)});document.querySelector('#volume').textContent=d.volume;document.querySelector('#recycle').textContent=d.recycle;document.querySelector('#saving').textContent=d.saving;document.querySelector('#chart-sub').textContent=period==='7'?'Quilos coletados nos últimos 7 dias':'Índice semanal dos últimos 30 dias'}
-    document.querySelector('#period').addEventListener('change',e=>render(e.target.value));render('7');
-    document.querySelectorAll('.nav-btn').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.nav-btn').forEach(x=>{x.classList.toggle('active',x===btn);x.removeAttribute('aria-current')});btn.setAttribute('aria-current','page');document.querySelectorAll('main>section').forEach(s=>s.classList.add('hidden'));document.querySelector('#'+btn.dataset.view).classList.remove('hidden')}));
-    document.querySelector('#routeBtn').addEventListener('click',()=>{const t=document.querySelector('#toast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),4200)});
-  </script>
+  <p class="sr-only" id="update-status" role="status" aria-live="polite" aria-atomic="true"></p>
+  <dialog id="route-dialog" aria-labelledby="route-title" aria-describedby="route-context">
+    <h2 id="route-title">Recomendação de coleta</h2><p class="sub" id="route-context"></p>
+    <ol id="route-stops"></ol><p class="sub">Ordem sugerida por regras simuladas, sem cálculo de trajeto. Pontos marcados como “Revisar” devem ser verificados antes da coleta.</p>
+    <form method="dialog"><button id="close-route" autofocus>Fechar</button></form>
+  </dialog>
+  <dialog id="point-dialog" aria-labelledby="point-title" aria-describedby="point-period">
+    <div class="eyebrow" id="point-type"></div><h2 id="point-title"></h2><p class="sub" id="point-period"></p>
+    <div class="detail-kpis"><div><small>Última ocupação</small><strong id="point-occupancy"></strong></div><div><small>Coletado no período</small><strong id="point-volume"></strong></div><div><small>Pico de ocupação</small><strong id="point-peak"></strong></div></div>
+    <div class="point-alert"><strong id="point-action"></strong><p id="point-reason"></p></div>
+    <h3 class="detail-heading">Histórico de ocupação</h3><p class="sub">Leitura diária em % · atenção a partir de 80% · crítico a partir de 90%</p>
+    <svg class="history-svg" id="point-history" viewBox="0 0 640 180" role="img" aria-label="Histórico diário de ocupação; valores disponíveis na tabela abaixo"></svg>
+    <details><summary>Ver leituras diárias</summary><div class="history-table" tabindex="0" role="region" aria-label="Leituras diárias da lixeira"><table><caption class="sr-only">Histórico no período selecionado</caption><thead><tr><th scope="col">Data</th><th scope="col">Coletado (kg)</th><th scope="col">Ocupação</th></tr></thead><tbody id="point-history-table"></tbody></table></div></details>
+    <div class="point-footer"><form method="dialog"><button id="close-point" autofocus>Fechar detalhes</button></form></div>
+  </dialog>
+  <noscript><p>Ative o JavaScript para consultar os dados simulados do dashboard.</p></noscript>
+  <script src="dashboard-model.js"></script>
+  <script src="dashboard.js"></script>
 </body>
 </html>
