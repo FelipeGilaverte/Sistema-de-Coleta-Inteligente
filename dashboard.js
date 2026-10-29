@@ -38,14 +38,17 @@
     // Dismiss any recommendation from the previous snapshot before publishing the next.
     if (dialog.open) dialog.close();
     current = model;
-    $('#period').value = String(model.period);
+    $('#period').value = model.selection;
+    $('#custom-period').classList.toggle('hidden', model.selection !== 'custom');
+    $('#start-date').value=model.start; $('#end-date').value=model.end;
+    if ($('#point-dialog').open) $('#point-dialog').close();
     $('#period-range').textContent = `${date(model.start)} a ${date(model.end, true)} · demonstração`;
     $('#volume').textContent = `${number.format(model.volumeKg)} kg`;
     $('#recycle').textContent = `${number.format(model.recyclePercent)}%`;
     $('#saving').textContent = money.format(model.saving);
     $('#volume-delta').textContent = delta(model.deltas.volumePercent, '%');
     $('#recycle-delta').textContent = delta(model.deltas.recyclePoints, ' p.p.');
-    const comparison = `Comparação com ${date(model.previousStart)} a ${date(model.previousEnd, true)}`;
+    const comparison = model.previousStart ? `Comparação com ${date(model.previousStart)} a ${date(model.previousEnd, true)}` : 'Histórico anterior insuficiente';
     $('#volume-delta').title = comparison;
     $('#recycle-delta').title = comparison;
     $('#saving-detail').textContent = `${model.avoidedTrips} visitas evitadas × R$ 30 (simulação)`;
@@ -55,7 +58,7 @@
     $('#alert-sub').textContent = `Ocupação em ${date(model.end)} · padrões nos últimos ${model.period} dias`;
     $('#chart-sub').textContent = model.period === 7
       ? 'Quilos coletados por dia · últimos 7 dias'
-      : 'Quilos coletados · 4 intervalos de 7 dias + 1 de 2 dias';
+      : `Quilos coletados em ${model.chart.length} intervalos · ${model.period} dias (datas na tabela)`;
     const trend = model.deltas.volumePercent;
     $('#trend').textContent = `Tendência: ${trend === null ? 'sem base' : trend > 5 ? 'alta' : trend < -5 ? 'queda' : 'estável'}`;
     $('#trend').title = 'Variação do volume frente ao período anterior: estável entre −5% e +5%. Regra simulada.';
@@ -87,7 +90,7 @@
     const alerts = document.createDocumentFragment();
     model.alerts.forEach((alert) => {
       const critical = alert.level === 'critical';
-      const row = element('div', `alert${critical ? ' danger' : ''}`);
+      const row = element('button', `alert${critical ? ' danger' : ''}`);
       row.dataset.id = alert.id;
       const icon = element('div', 'alert-icon', '●');
       icon.setAttribute('aria-hidden', 'true');
@@ -100,10 +103,36 @@
     $('#alert-list').replaceChildren(alerts);
     $('#route-summary').textContent = `${model.route.stops.length} pontos priorizados: coleta por ocupação, seguida de revisão dos padrões incomuns.`;
     $('#routeBtn').disabled = !model.route.stops.length;
+    renderBins();
     $('#update-status').textContent = `Visão de ${model.period} dias atualizada: ${number.format(model.volumeKg)} kg e ${model.alerts.length} alertas.`;
   }
 
-  $('#period').addEventListener('change', (event) => render(event.target.value));
+  $('#period').addEventListener('change', (event) => { if(event.target.value==='custom') { $('#custom-period').classList.remove('hidden'); return; } render(event.target.value); });
+  $('#custom-period').addEventListener('submit',e=>{e.preventDefault();try{render({start:$('#start-date').value,end:$('#end-date').value});$('#period-error').textContent='';}catch(error){$('#period-error').textContent=error.message;}});
+  $('#cancel-period').onclick=()=>{ $('#custom-period').classList.add('hidden'); $('#period').value=current.selection; };
+  function renderBins(){
+    const query=$('#bin-search').value.toLocaleLowerCase('pt-BR');
+    const bins=current.bins.filter(b=>b.name.toLocaleLowerCase('pt-BR').includes(query)&&($('#bin-type').value==='all'||b.type===$('#bin-type').value)&&($('#bin-status').value==='all'||b.level===$('#bin-status').value));
+    bins.sort((a,b)=>({critical:0,high:1,review:2,normal:3}[a.level]-{critical:0,high:1,review:2,normal:3}[b.level])||b.occupancy-a.occupancy||a.id.localeCompare(b.id));
+    $('#bin-count').textContent=`${bins.length} de ${current.bins.length}`;
+    $('#bins-context').textContent=`Ocupação em ${date(current.end)} · volumes de ${range(current.start,current.end)}`;
+    $('#bin-list').replaceChildren();
+    bins.forEach(b=>{const card=element('button','bin-card');card.dataset.id=b.id;card.type='button';card.append(element('strong','',b.name),element('p','',`${b.occupancy}% de ocupação · ${levels[b.level]||'Normal'}`),element('small','',`${number.format(b.volumeKg)} kg no período · Ver histórico`));card.onclick=()=>openPoint(b);$('#bin-list').append(card);});
+    if(!bins.length){const empty=element('p','empty','Nenhuma lixeira encontrada. Limpe os filtros para ver todos os pontos.');empty.id='bins-empty';$('#bin-list').append(empty);}
+  }
+  function openPoint(b){
+    $('#point-title').textContent=b.name;$('#point-type').textContent=b.type;
+    $('#point-period').textContent=`${range(current.start,current.end)} · ${current.period} dias`;
+    $('#point-occupancy').textContent=b.occupancy+'%';$('#point-volume').textContent=number.format(b.volumeKg)+' kg';
+    $('#point-peak').textContent=Math.max(...b.history.map(h=>h.occupancy))+'%';
+    $('#point-reason').textContent=b.reason;$('#point-action').textContent=b.action;
+    $('#point-history-table').replaceChildren();b.history.forEach(h=>{const row=element('tr');row.append(element('td','',date(h.date)),element('td','',number.format(h.kg)),element('td','',h.occupancy+'%'));$('#point-history-table').append(row);});
+    $('#point-history').classList.add('hidden');$('#point-dialog details').open=true;$('#point-dialog').showModal();
+  }
+  ['bin-search','bin-type','bin-status'].forEach(id=>$('#'+id).addEventListener(id==='bin-search'?'input':'change',renderBins));
+  $('#reset-bins').onclick=()=>{$('#bin-search').value='';$('#bin-type').value='all';$('#bin-status').value='all';renderBins();};
+  $('#alert-list').addEventListener('click',e=>{const row=e.target.closest('[data-id]');if(row)openPoint(current.bins.find(b=>b.id===row.dataset.id));});
+
   document.querySelectorAll('.nav-btn').forEach((button) => {
     button.addEventListener('click', () => {
       if (dialog.open) dialog.close();

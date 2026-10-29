@@ -122,3 +122,6 @@ Release final prevista para 12/11, sem ser declarada concluída nesta entrega.
 - `tests/`: regressão das regras e testes de interface.
 - `docs/Planejamento_EcoCondominio_IA.pdf`: planejamento original da atividade.
 - `docs/VALIDACAO_MVP_2026-10-29.md`: evidências da validação deste marco.
+
+## Exploração interativa
+Selecione 7, 14 ou 30 dias, ou Personalizado para aplicar datas entre 31/08 e 29/10/2026. Explore as 12 lixeiras com busca, filtros de tipo e situação. Clique em uma lixeira ou alerta para consultar ocupação, pico, volume e leituras diárias. Filtros afetam somente a lista; os indicadores permanecem globais. Intervalos sem histórico anterior completo não exibem comparação.
