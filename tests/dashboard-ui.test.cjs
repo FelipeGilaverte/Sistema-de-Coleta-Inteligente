@@ -416,3 +416,20 @@ for (const width of [320, 375, 650, 768, 1024, 1440]) {
     }, { width, height: width <= 650 ? 812 : 1000 });
   });
 }
+test('previsão abre histórico e registro de coleta sobrevive ao recarregamento', async () => {
+  await withPage(async page => {
+    await page.locator('#forecast-list button').first().click();
+    const name = await page.locator('#point-title').textContent();
+    assert.ok(await page.locator('#point-history polyline').isVisible());
+    await page.click('#record-collection');
+    assert.match(await page.locator('#point-collection-status').textContent(), /Coleta registrada/);
+    await page.click('#close-point');
+    await page.reload();
+    assert.ok((await page.locator('#collection-list').textContent()).includes(name));
+    await page.locator('#waste-mix button[data-type="Rejeito"]').click();
+    assert.equal(await page.locator('#bin-type').inputValue(), 'Rejeito');
+    assert.equal(await page.locator('#bin-list button').count(), 1);
+    await page.click('#routeBtn');
+    assert.match(await page.locator('#route-context').textContent(), /\d+ m estimados/);
+  });
+});

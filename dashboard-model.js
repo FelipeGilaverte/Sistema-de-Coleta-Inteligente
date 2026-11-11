@@ -13,7 +13,7 @@
     { id: 'torre-a-reciclaveis', name: 'Torre A · Recicláveis', type: 'Recicláveis', recyclable: true, finalOccupancy: 36 },
     { id: 'torre-b-reciclaveis', name: 'Torre B · Recicláveis', type: 'Recicláveis', recyclable: true, finalOccupancy: 57 },
     { id: 'torre-c-organico', name: 'Torre C · Orgânico', type: 'Orgânico', recyclable: false, finalOccupancy: 31 },
-    { id: 'jardim-organico', name: 'Jardim · Orgânico', type: 'Orgânico', recyclable: false, finalOccupancy: 42 },
+    { id: 'jardim-rejeito', name: 'Jardim · Rejeito', type: 'Rejeito', recyclable: false, finalOccupancy: 42 },
     { id: 'portaria-papel', name: 'Portaria · Papel', type: 'Papel', recyclable: true, finalOccupancy: 28 },
     { id: 'salao-reciclaveis', name: 'Salão · Recicláveis', type: 'Recicláveis', recyclable: true, finalOccupancy: 54 },
     { id: 'piscina-plastico', name: 'Piscina · Plástico', type: 'Plástico', recyclable: true, finalOccupancy: 33 }
