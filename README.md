@@ -6,8 +6,8 @@ dashboard estabilizado, períodos sincronizados e revisão de usabilidade e
 responsividade realizada, com um refinamento visual planejado para 05/11.
 
 Todos os dados são fictícios. A aplicação funciona inteiramente no navegador,
-sem backend, sensores conectados, persistência ou modelo de IA em produção.
-As recomendações demonstram regras de priorização, não uma otimização real de trajetos.
+com sensores e previsões simulados. Os atendimentos são gravados localmente no navegador.
+As recomendações combinam alertas e distâncias estimadas em um mapa fictício.
 
 ## Executar a versão desta branch
 
@@ -102,17 +102,14 @@ as larguras verificadas e os limites. São verificações técnicas e uma inspe�
 usabilidade; não representam pesquisa com usuários, teste de carga ou validação
 com sensores reais.
 
-## Pendência proposital para 05/11/2026
+## Operação da versão final
 
-**Legibilidade do gráfico em telas menores:** revisar espaçamento entre barras e
-rótulos, tamanho do texto e apresentação dos intervalos de 30 dias. Os rótulos
-continuam compactos e podem quebrar em duas linhas no celular. A tabela permite
-consultar os valores, mas não encerra o refinamento visual do gráfico.
+- Use os cartões de volume por tipo de resíduo para filtrar os pontos. Cada lixeira exibe o histórico de ocupação em gráfico e tabela.
+- Consulte o risco de atingir 80% ou mais no dia seguinte ao intervalo selecionado. A estimativa extrapola a tendência positiva de até sete leituras e limita a ocupação a 100%.
+- Abra a recomendação para ver a ordem de atendimento e a distância simulada de cada trecho, da base até a última parada.
+- Abra uma lixeira e selecione **Registrar coleta agora**. A lista de coletas exibe o ponto e o horário. O navegador guarda o histórico local dos últimos 90 dias, sem sincronização entre computadores.
 
-Esse ajuste permanece aberto conforme o marco acadêmico; não bloqueia a troca
-de períodos, os indicadores ou as recomendações. Para 05/11 estão previstos o
-refinamento final de UI/UX, nova rodada de testes, deploy do MVP e retrospectiva.
-Release final prevista para 12/11, sem ser declarada concluída nesta entrega.
+O piloto é simulado. Disponibilidade em produção, metas de redução e aceite da equipe dependem da validação pelos responsáveis.
 
 ## Estrutura
 

@@ -33,6 +33,8 @@
     @media(max-width:650px){.app{display:block}aside{position:static;height:auto;display:flex;flex-direction:row;padding:12px 16px;align-items:center}.brand{margin-right:auto}.brand span{display:block}.brand small{display:none}nav{display:flex}.nav-btn{padding:9px}.nav-btn span{display:none}main{padding:20px 15px 90px}.topbar{align-items:flex-start}.top-actions{flex-direction:column;align-items:flex-end}.live{font-size:12px}.kpis{grid-template-columns:1fr 1fr;gap:9px}.kpi{padding:14px}.kpi strong{font-size:24px}.grid{display:block}.grid>.card{margin-bottom:14px}.chart{gap:6px}.bar-label{font-size:10px}.story{grid-template-columns:1fr}.route{align-items:flex-start;gap:12px;flex-direction:column}.toast{left:15px;right:15px}}
     @media(max-width:1100px){.bin-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:650px){.bin-grid{grid-template-columns:1fr}.filters label{flex:1 1 140px}.filters .search{flex-basis:100%}.detail-kpis{grid-template-columns:1fr;gap:8px}.detail-kpis>div{display:flex;align-items:center;justify-content:space-between;gap:10px}.detail-kpis strong{margin:0;font-size:21px}dialog{padding:18px}.bin-foot{flex-wrap:wrap}.history-table th,.history-table td{padding:7px 3px}}
+    .bar-wrap{min-width:0}.bar-label{text-align:center;overflow-wrap:anywhere}.bar-label span{display:block}.operations{margin-top:20px}.operations li{margin:6px 0}.operations summary{font-weight:700}.point-footer{flex-wrap:wrap;gap:8px}
+    @media(max-width:650px){.chart{gap:4px}.bar-label{font-size:11px;line-height:1.2}.bar{width:min(34px,80%)}}
   </style>
 </head>
 <body>
@@ -79,13 +81,24 @@
           <div class="card-head"><div><h2 id="explorer-title">Explore as lixeiras</h2><div class="sub" id="bins-context"></div></div><span class="tag" id="bin-count" role="status" aria-live="polite"></span></div>
           <div class="filters">
             <label class="search">Buscar lixeira<input class="select" id="bin-search" type="search" placeholder="Torre, garagem, área gourmet…"></label>
-            <label>Tipo de resíduo<select class="select" id="bin-type"><option value="all">Todos os tipos</option><option>Orgânico</option><option>Recicláveis</option><option>Vidro</option><option>Papel</option><option>Plástico</option></select></label>
+            <label>Tipo de resíduo<select class="select" id="bin-type"><option value="all">Todos os tipos</option><option>Orgânico</option><option>Recicláveis</option><option>Vidro</option><option>Papel</option><option>Plástico</option><option>Rejeito</option></select></label>
             <label>Situação<select class="select" id="bin-status"><option value="all">Todas as situações</option><option value="critical">Crítico</option><option value="high">Alto</option><option value="review">Revisar</option><option value="normal">Normal</option></select></label>
             <button class="btn" id="reset-bins" type="button">Limpar filtros</button>
           </div>
           <div class="waste-mix" id="waste-mix" role="group" aria-label="Volume por tipo de resíduo; selecione para filtrar as lixeiras"></div>
           <p class="sub">Os filtros abaixo afetam apenas a lista de lixeiras. Os indicadores acima mostram o condomínio inteiro.</p>
           <div class="bin-grid" id="bin-list"></div>
+        </section>
+        <section class="card operations" aria-labelledby="forecast-title">
+          <h2 id="forecast-title">Risco de lotação em 24 horas</h2>
+          <p class="sub" id="forecast-context"></p>
+          <ul id="forecast-list"></ul>
+        </section>
+        <section class="card operations" aria-labelledby="collection-title">
+          <h2 id="collection-title">Registro de coletas</h2>
+          <p class="sub">Abra uma lixeira para registrar o atendimento. Os registros ficam neste navegador por 90 dias e as leituras da simulação permanecem históricas.</p>
+          <p id="collection-status" role="status"></p>
+          <ul id="collection-list"></ul>
         </section>
       </section>
       <section id="projeto" class="presentation hidden">
@@ -102,7 +115,7 @@
   <p class="sr-only" id="update-status" role="status" aria-live="polite" aria-atomic="true"></p>
   <dialog id="route-dialog" aria-labelledby="route-title" aria-describedby="route-context">
     <h2 id="route-title">Recomendação de coleta</h2><p class="sub" id="route-context"></p>
-    <ol id="route-stops"></ol><p class="sub">Ordem sugerida por regras simuladas, sem cálculo de trajeto. Pontos marcados como “Revisar” devem ser verificados antes da coleta.</p>
+    <ol id="route-stops"></ol><p class="sub">A ordem segue a prioridade dos alertas. Os trechos usam um mapa fictício. Pontos marcados como “Revisar” devem ser verificados antes da coleta.</p>
     <form method="dialog"><button id="close-route" autofocus>Fechar</button></form>
   </dialog>
   <dialog id="point-dialog" aria-labelledby="point-title" aria-describedby="point-period">
@@ -112,7 +125,8 @@
     <h3 class="detail-heading">Histórico de ocupação</h3><p class="sub">Leitura diária em % · atenção a partir de 80% · crítico a partir de 90%</p>
     <svg class="history-svg" id="point-history" viewBox="0 0 640 180" role="img" aria-label="Histórico diário de ocupação; valores disponíveis na tabela abaixo"></svg>
     <details><summary>Ver leituras diárias</summary><div class="history-table" tabindex="0" role="region" aria-label="Leituras diárias da lixeira"><table><caption class="sr-only">Histórico no período selecionado</caption><thead><tr><th scope="col">Data</th><th scope="col">Coletado (kg)</th><th scope="col">Ocupação</th></tr></thead><tbody id="point-history-table"></tbody></table></div></details>
-    <div class="point-footer"><form method="dialog"><button id="close-point" autofocus>Fechar detalhes</button></form></div>
+    <p id="point-collection-status" role="status"></p>
+    <div class="point-footer"><button id="record-collection" type="button">Registrar coleta agora</button><form method="dialog"><button id="close-point" autofocus>Fechar detalhes</button></form></div>
   </dialog>
   <noscript><p>Ative o JavaScript para consultar os dados simulados do dashboard.</p></noscript>
   <script src="dashboard-model.js"></script>
