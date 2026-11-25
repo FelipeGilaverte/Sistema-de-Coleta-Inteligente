@@ -35,6 +35,13 @@
     @media(max-width:650px){.bin-grid{grid-template-columns:1fr}.filters label{flex:1 1 140px}.filters .search{flex-basis:100%}.detail-kpis{grid-template-columns:1fr;gap:8px}.detail-kpis>div{display:flex;align-items:center;justify-content:space-between;gap:10px}.detail-kpis strong{margin:0;font-size:21px}dialog{padding:18px}.bin-foot{flex-wrap:wrap}.history-table th,.history-table td{padding:7px 3px}}
     .bar-wrap{min-width:0}.bar-label{text-align:center;overflow-wrap:anywhere}.bar-label span{display:block}.operations{margin-top:20px}.operations li{margin:6px 0}.operations summary{font-weight:700}.point-footer{flex-wrap:wrap;gap:8px}
     @media(max-width:650px){.chart{gap:4px}.bar-label{font-size:11px;line-height:1.2}.bar{width:min(34px,80%)}}
+    body:not([data-sqlite]) [data-local-only], body[data-sqlite] [data-static-only]{display:none}
+    .local-status:empty{display:none}
+    .local-reading{margin:14px 0}
+    .local-reading input,.local-responsible input{max-width:100%;min-height:44px}
+    .local-responsible{display:grid;gap:6px;margin-top:12px}
+    .local-responsible input{width:100%}
+    .point-footer{gap:8px;flex-wrap:wrap}
   </style>
 </head>
 <body>
@@ -69,7 +76,9 @@
             <div class="card-head"><div><h2>Geração de resíduos</h2><div class="sub" id="chart-sub"></div></div><span class="tag" id="trend"></span></div>
             <div class="chart" id="chart" role="img" aria-describedby="chart-sub"></div>
             <details class="chart-data"><summary>Consultar valores do gráfico</summary><table><caption id="chart-caption"></caption><thead><tr><th scope="col">Período</th><th scope="col">Coletado (kg)</th></tr></thead><tbody id="chart-table-body"></tbody></table></details>
-            <div class="route"><div><strong>Rota inteligente pronta</strong><p id="route-summary"></p></div><button id="routeBtn" aria-haspopup="dialog">Ver recomendação</button></div>
+            <div class="route"><div><strong id="route-heading">Rota inteligente pronta</strong><p id="route-summary"></p></div><button id="routeBtn" aria-haspopup="dialog">Ver recomendação</button></div>
+            <p id="route-message" class="local-status" data-local-only role="status"></p>
+            <button id="last-route" class="btn hidden" type="button" data-local-only aria-haspopup="dialog">Ver última rota salva</button>
           </article>
           <article class="card">
             <div class="card-head"><div><h2>Pontos que exigem atenção</h2><div class="sub" id="alert-sub"></div></div><span class="tag" id="alert-count"></span></div>
@@ -82,12 +91,18 @@
           <div class="filters">
             <label class="search">Buscar lixeira<input class="select" id="bin-search" type="search" placeholder="Torre, garagem, área gourmet…"></label>
             <label>Tipo de resíduo<select class="select" id="bin-type"><option value="all">Todos os tipos</option><option>Orgânico</option><option>Recicláveis</option><option>Vidro</option><option>Papel</option><option>Plástico</option><option>Rejeito</option></select></label>
-            <label>Situação<select class="select" id="bin-status"><option value="all">Todas as situações</option><option value="critical">Crítico</option><option value="high">Alto</option><option value="review">Revisar</option><option value="normal">Normal</option></select></label>
+            <label>Situação<select class="select" id="bin-status"><option value="all">Todas as situações</option><option value="critical">Crítico</option><option value="high">Alto</option><option value="review" data-static-only>Revisar</option><option value="normal">Normal</option><option value="stale" data-local-only>Leitura desatualizada</option></select></label>
             <button class="btn" id="reset-bins" type="button">Limpar filtros</button>
           </div>
           <div class="waste-mix" id="waste-mix" role="group" aria-label="Volume por tipo de resíduo; selecione para filtrar as lixeiras"></div>
           <p class="sub">Os filtros abaixo afetam apenas a lista de lixeiras. Os indicadores acima mostram o condomínio inteiro.</p>
           <div class="bin-grid" id="bin-list"></div>
+        </section>
+        <section class="card operations" data-local-only aria-labelledby="sensor-title">
+          <h2 id="sensor-title">Simulador de sensores</h2>
+          <p class="sub">Abra uma lixeira para enviar um novo percentual, ou renove o horário das leituras mantendo os níveis atuais.</p>
+          <button id="refresh-readings" class="btn" type="button" disabled>Atualizar leituras simuladas</button>
+          <p id="sensor-status" class="local-status" role="status"></p>
         </section>
         <section class="card operations" aria-labelledby="forecast-title">
           <h2 id="forecast-title">Risco de lotação em 24 horas</h2>
@@ -96,7 +111,8 @@
         </section>
         <section class="card operations" aria-labelledby="collection-title">
           <h2 id="collection-title">Registro de coletas</h2>
-          <p class="sub">Abra uma lixeira para registrar o atendimento. Os registros ficam neste navegador por 90 dias e as leituras da simulação permanecem históricas.</p>
+          <p class="sub" data-static-only>Abra uma lixeira para registrar o atendimento. Os registros ficam neste navegador por 90 dias e as leituras da simulação permanecem históricas.</p>
+          <p class="sub" data-local-only>Registre o atendimento no detalhe da lixeira. A lista mostra os últimos 90 dias gravados no SQLite.</p>
           <p id="collection-status" role="status"></p>
           <ul id="collection-list"></ul>
         </section>
@@ -115,7 +131,9 @@
   <p class="sr-only" id="update-status" role="status" aria-live="polite" aria-atomic="true"></p>
   <dialog id="route-dialog" aria-labelledby="route-title" aria-describedby="route-context">
     <h2 id="route-title">Recomendação de coleta</h2><p class="sub" id="route-context"></p>
-    <ol id="route-stops"></ol><p class="sub">A ordem segue a prioridade dos alertas. Os trechos usam um mapa fictício. Pontos marcados como “Revisar” devem ser verificados antes da coleta.</p>
+    <ol id="route-stops"></ol>
+    <p class="sub" data-static-only>A ordem segue a prioridade dos alertas. Os trechos usam um mapa fictício. Pontos marcados como “Revisar” devem ser verificados antes da coleta.</p>
+    <p class="sub" data-local-only>A ordem considera criticidade, previsão e distância em um mapa fictício. Abra uma parada para registrar o atendimento.</p>
     <form method="dialog"><button id="close-route" autofocus>Fechar</button></form>
   </dialog>
   <dialog id="point-dialog" aria-labelledby="point-title" aria-describedby="point-period">
@@ -125,6 +143,12 @@
     <h3 class="detail-heading">Histórico de ocupação</h3><p class="sub">Leitura diária em % · atenção a partir de 80% · crítico a partir de 90%</p>
     <svg class="history-svg" id="point-history" viewBox="0 0 640 180" role="img" aria-label="Histórico diário de ocupação; valores disponíveis na tabela abaixo"></svg>
     <details><summary>Ver leituras diárias</summary><div class="history-table" tabindex="0" role="region" aria-label="Leituras diárias da lixeira"><table><caption class="sr-only">Histórico no período selecionado</caption><thead><tr><th scope="col">Data</th><th scope="col">Coletado (kg)</th><th scope="col">Ocupação</th></tr></thead><tbody id="point-history-table"></tbody></table></div></details>
+    <p id="point-last-collection" class="sub" data-local-only></p>
+    <form id="reading-form" class="filters local-reading" data-local-only>
+      <label>Nova ocupação simulada (%)<input class="select" id="reading-occupancy" type="number" min="0" max="100" step="1" required></label>
+      <button class="btn" type="submit">Enviar leitura</button>
+    </form>
+    <label class="local-responsible" data-local-only>Responsável pela coleta<input class="select" id="collection-responsible" value="Equipe de coleta" maxlength="80" required></label>
     <p id="point-collection-status" role="status"></p>
     <div class="point-footer"><button id="record-collection" type="button">Registrar coleta agora</button><form method="dialog"><button id="close-point" autofocus>Fechar detalhes</button></form></div>
   </dialog>

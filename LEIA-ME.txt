@@ -1,0 +1,20 @@
+ECOCONDOMÍNIO IA | ENTREGA 2 DE LPS | PUC-SP
+
+1. Extraia a pasta inteira do ZIP.
+2. No Windows 64 bits, clique duas vezes em Iniciar-Windows.bat.
+3. O aplicativo abre no navegador. Se necessário, abra o endereço
+   exibido na janela, normalmente http://127.0.0.1:8765/.
+4. Mantenha a janela aberta enquanto usa o aplicativo. Ctrl+C encerra.
+
+O ZIP portátil já vem com o Node.js. O banco SQLite é criado na pasta
+data no primeiro uso. Dados operacionais continuam lá entre execuções.
+
+Para testar: gere uma rota, escolha a Torre B, registre uma coleta e
+confira a lixeira em 0%, o alerta encerrado e o registro no histórico.
+Para repor a leitura de teste, abra a lixeira e envie 94% como nova
+ocupação simulada. Se as leituras estiverem desatualizadas, use
+"Atualizar leituras simuladas" antes de gerar a rota.
+
+Documentação da entrega: docs/Entrega2_LPS_EcoCondominio_IA.pdf
+Outros sistemas: instale Node.js 24 ou superior e rode node server.cjs
+na pasta do projeto. As instruções completas estão no README.md.

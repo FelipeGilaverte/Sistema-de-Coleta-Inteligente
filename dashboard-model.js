@@ -66,7 +66,7 @@
     return Number.isFinite(timestamp) && new Date(timestamp).toISOString().slice(0, 10) === value;
   }
 
-  function selectWindow(request) {
+  function selectWindow(request, dailyReadings) {
     if (request !== null && typeof request === 'object') {
       if (Array.isArray(request) || !isValidDate(request.start) || !isValidDate(request.end)) {
         throw new RangeError('Informe datas válidas de início e fim no formato AAAA-MM-DD.');
@@ -79,12 +79,12 @@
       }
       return {
         selection: 'custom',
-        startIndex: DAILY_READINGS.findIndex(function (day) { return day.date === request.start; }),
-        endIndex: DAILY_READINGS.findIndex(function (day) { return day.date === request.end; })
+        startIndex: dailyReadings.findIndex(function (day) { return day.date === request.start; }),
+        endIndex: dailyReadings.findIndex(function (day) { return day.date === request.end; })
       };
     }
     const period = normalizePeriod(request);
-    return { selection: String(period), startIndex: DAILY_READINGS.length - period, endIndex: DAILY_READINGS.length - 1 };
+    return { selection: String(period), startIndex: dailyReadings.length - period, endIndex: dailyReadings.length - 1 };
   }
 
   function classifyOccupancy(occupancy) {
@@ -136,13 +136,15 @@
     return date.slice(8, 10) + '/' + date.slice(5, 7);
   }
 
-  function getDashboardModel(request) {
-    const window = selectWindow(request);
-    const daily = DAILY_READINGS.slice(window.startIndex, window.endIndex + 1);
+  function getDashboardModel(request, dataset) {
+    const dailyReadings = dataset ? dataset.dailyReadings : DAILY_READINGS;
+    const points = dataset ? dataset.points : POINTS;
+    const window = selectWindow(request, dailyReadings);
+    const daily = dailyReadings.slice(window.startIndex, window.endIndex + 1);
     const period = daily.length;
     // Não comparar uma janela completa com um histórico anterior parcial.
     const comparisonAvailable = window.startIndex >= period;
-    const previous = comparisonAvailable ? DAILY_READINGS.slice(window.startIndex - period, window.startIndex) : [];
+    const previous = comparisonAvailable ? dailyReadings.slice(window.startIndex - period, window.startIndex) : [];
     const currentTotals = totals(daily);
     const previousTotals = totals(previous);
     const chart = [];
@@ -159,8 +161,8 @@
         kg: totals(group).volumeKg
       });
     }
-    const alerts = deriveAlerts(daily);
-    const bins = POINTS.map(function (point) {
+    const alerts = deriveAlerts(daily, points);
+    const bins = points.map(function (point) {
       const history = daily.map(function (day) {
         const reading = day.readings.find(function (item) { return item.pointId === point.id; });
         return { date: day.date, kg: reading.kg, recycledKg: reading.recycledKg, occupancy: reading.occupancy };
@@ -171,7 +173,7 @@
         id: point.id,
         name: point.name,
         type: point.type,
-        recyclable: point.recyclable,
+        recyclable: Boolean(point.recyclable),
         occupancy: occupancy,
         volumeKg: history.reduce(function (sum, day) { return sum + day.kg; }, 0),
         recycledKg: history.reduce(function (sum, day) { return sum + day.recycledKg; }, 0),
@@ -201,7 +203,7 @@
       alerts: alerts,
       bins: bins,
       attentionCount: alerts.filter(function (alert) { return alert.level !== 'review'; }).length,
-      pointCount: POINTS.length,
+      pointCount: points.length,
       route: { stops: alerts.slice(), names: alerts.map(function (alert) { return alert.name; }) },
       daily: daily
     };

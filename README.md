@@ -1,124 +1,52 @@
 # EcoCondomínio IA
 
-POC acadêmica do **Sistema Inteligente de Coleta de Lixo em condomínios**.
-Este MVP representa o marco de **29/10/2026 — Weekly 7 / Sprint Review 3**:
-dashboard estabilizado, períodos sincronizados e revisão de usabilidade e
-responsividade realizada, com um refinamento visual planejado para 05/11.
+**Entrega 2 de Laboratório de Projeto de Software · PUC-SP · Grupo 4**
 
-Todos os dados são fictícios. A aplicação funciona inteiramente no navegador,
-com sensores e previsões simulados. Os atendimentos são gravados localmente no navegador.
-As recomendações combinam alertas e distâncias estimadas em um mapa fictício.
+Protótipo acadêmico que monitora 12 pontos de coleta de um condomínio. O dashboard
+acompanha ocupação e volume de resíduos, prevê lotação e organiza a coleta
+interna. As leituras, o mapa e as estimativas usam dados fictícios.
 
-## Executar a versão desta branch
+## Executar localmente
 
-Abra `index.html` no navegador. Mantenha `dashboard-model.js` e `dashboard.js`
-na mesma pasta; não é necessário instalar dependências para usar o dashboard.
+1. Extraia a pasta inteira do ZIP da entrega.
+2. No Windows de 64 bits, dê dois cliques em **Iniciar-Windows.bat**. O ZIP portátil inclui o Node.js.
+3. Mantenha a janela aberta e acesse [127.0.0.1:8765](http://127.0.0.1:8765) se o navegador não abrir automaticamente.
 
-Opcionalmente, com Python instalado, execute na raiz do repositório:
-
-```sh
-python -m http.server 8080 --bind 127.0.0.1
-```
-
-Acesse [http://localhost:8080](http://localhost:8080).
-
-A [demonstração publicada anteriormente](https://ecocondominio-ia.felipegilaverte.chatgpt.site)
-é uma versão de referência e **não recebe automaticamente as alterações desta branch**.
-O deploy do marco atualizado permanece para a etapa de 05/11.
-
-## Estado do MVP em 29/10
-
-- Visual original preservado: paleta, navegação, cartões, gráfico e painel de alertas.
-- Seleção de 7/30 dias atualiza, em uma única operação síncrona, indicadores,
-  comparações, gráfico, contador, lista de alertas e recomendação.
-- Retornar de “Como funciona” preserva o período; trocas rápidas não deixam dados antigos.
-- Recomendações refletem os mesmos pontos e a mesma ordem dos alertas. O diálogo
-  permanece aberto para leitura até ser fechado por botão ou Escape, com retorno do foco.
-- Navegação e seletor utilizáveis por teclado; controles com nomes acessíveis,
-  anúncio da atualização e tabela expansível com os valores do gráfico.
-- POC revisada em computador, tablet e celular, de 320 a 1440 px de largura.
-
-## Dados e regras da demonstração
-
-Uma série determinística de 60 dias, de 31/08 a **29/10/2026**, contém medidas de
-12 pontos. A data final é fixa para tornar a apresentação reproduzível, independentemente
-da data do computador. Os 7 dias são exatamente o recorte final da janela de 30 dias.
-
-| Indicador | Regra |
-| --- | --- |
-| Volume coletado | Soma dos quilos diários no período. |
-| Reciclagem | Quilos recicláveis / volume total × 100; média ponderada pelo volume. |
-| Comparações | Período anterior de igual duração, sem sobreposição; reciclagem em pontos percentuais. |
-| Economia estimada | Cada leitura diária com ocupação abaixo de 40% representa uma visita evitada, avaliada ficticiamente em R$ 30. Não é uma economia financeira medida. |
-| Tendência | Variação do volume em relação ao período anterior: alta acima de +5%, queda abaixo de −5%, estável no intervalo. Não é previsão de IA. |
-| Ocupação crítica/alta | Última leitura do período: crítico a partir de 90%, alto de 80% a menos de 90%. |
-| Padrão incomum | Volume do último dia pelo menos 50% e 5 kg acima da média dos dias anteriores da janela; ambos os critérios devem ser atendidos. |
-| Prioridade | Crítico → alto → revisar; desempate por ocupação decrescente e identificador. Um ponto aparece apenas uma vez. |
-
-Ocupações críticas e altas permanecem iguais ao trocar de período porque ambas
-as janelas terminam na mesma data. Alertas de padrão incomum podem mudar porque
-a base de comparação usa 6 ou 29 dias anteriores. Isso é esperado, e o texto de
-cada alerta informa a média e a regra aplicadas. Pontos “Revisar” devem ser
-verificados antes da coleta.
-
-O gráfico usa **quilos reais da simulação**, com soma idêntica ao indicador de volume:
-
-- 7 dias: sete barras diárias, de 23 a 29/10.
-- 30 dias: cinco intervalos consecutivos, de 30/09 a 29/10, sem omissões ou duplicações.
-  Os quatro primeiros contêm 7 dias e o último, 28–29/10, contém **somente 2 dias**;
-  sua barra menor não indica necessariamente queda na demanda. A escala se ajusta
-  a cada visão; compare valores e datas pela tabela, não alturas entre visões.
-
-| Referência para apresentação | 7 dias | 30 dias |
-| --- | --- | --- |
-| Volume | 1.268 kg | 5.084 kg |
-| Reciclagem exibida | 73,5% | 71,6% |
-| Economia simulada | R$ 750 | R$ 3.300 |
-| Alertas | 3 (2 para coleta + 1 revisão) | 4 (2 para coleta + 2 revisões) |
-
-## Validação
-
-Testes de regras usam apenas Node.js 20 ou superior:
+No macOS, Linux ou em um checkout do GitHub, use **Node.js 24 ou superior**
+e execute na pasta do projeto:
 
 ```sh
-npm test
+node server.cjs
 ```
 
-Para os testes de interface, instale as dependências de desenvolvimento e use
-Google Chrome instalado:
+SQLite e servidor HTTP usam módulos nativos do Node.js. Para executar o app,
+basta o runtime. A aplicação escuta em `127.0.0.1` e cria
+`data/ecocondominio.sqlite` automaticamente no primeiro uso.
+`ECO_PORT` permite escolher outra porta e `ECO_DB_PATH`, outro arquivo de banco.
+Abrir `index.html` diretamente carrega a demonstração estática com armazenamento
+do navegador, mantida para a publicação estática do projeto.
 
-```sh
-npm ci
-npm run test:ui
-```
+## Roteiro de demonstração
 
-Também é possível usar Microsoft Edge definindo `BROWSER_CHANNEL=msedge`.
-No PowerShell: `$env:BROWSER_CHANNEL='msedge'; npm run test:ui`.
-Para salvar capturas em `artifacts/`, defina `CAPTURE_SCREENSHOTS=1`.
+1. Troque entre 7, 14, 30 dias ou um intervalo personalizado. O filtro afeta os indicadores históricos e o gráfico. A ocupação e os alertas operacionais mostram o último estado disponível.
+2. Gere uma rota. A primeira parada no banco recém-criado é **Torre B — Orgânico (94%)**. Abra a parada, informe o responsável e registre a coleta. A ocupação zera, o alerta fecha e a rota salva registra a parada atendida.
+3. Veja o registro em **Registro de coletas**. Feche e reabra o servidor para verificar a persistência no SQLite.
+4. No detalhe da Torre B, envie uma nova leitura simulada de **94%** para abrir um novo alerta. Leituras com mais de 30 minutos ficam fora da rota. **Atualizar leituras simuladas** renova os horários mantendo os níveis atuais.
 
-Foram aprovados **15 testes de regras + 10 testes de interface** em Chrome headless.
-O [registro de validação](docs/VALIDACAO_MVP_2026-10-29.md) descreve os cenários,
-as larguras verificadas e os limites. São verificações técnicas e uma inspeção de
-usabilidade; não representam pesquisa com usuários, teste de carga ou validação
-com sensores reais.
+Os indicadores usam 60 dias de leituras diárias fictícias (31/08 a 29/10/2026).
+Volume, reciclagem e economia correspondem a esse histórico. As leituras ao
+vivo simuladas alteram ocupação, alertas e rota. O histórico operacional de
+coletas mostra os registros SQLite dos últimos 90 dias.
 
-## Operação da versão final
+A previsão das próximas 24 horas usa uma regra local que extrapola a
+tendência positiva. A rota prioriza níveis críticos (90% ou mais), altos
+(80% a 89%) e pontos com previsão de pelo menos 90%. Para desempate,
+considera previsão, distância de Manhattan no mapa fictício e identificador.
+O MVP local usa um único condomínio e o responsável informado na tela.
 
-- Use os cartões de volume por tipo de resíduo para filtrar os pontos. Cada lixeira exibe o histórico de ocupação em gráfico e tabela.
-- Consulte o risco de atingir 80% ou mais no dia seguinte ao intervalo selecionado. A estimativa extrapola a tendência positiva de até sete leituras e limita a ocupação a 100%.
-- Abra a recomendação para ver a ordem de atendimento e a distância simulada de cada trecho, da base até a última parada.
-- Abra uma lixeira e selecione **Registrar coleta agora**. A lista de coletas exibe o ponto e o horário. O navegador guarda o histórico local dos últimos 90 dias, sem sincronização entre computadores.
+## Documentação e testes
 
-O piloto é simulado. Disponibilidade em produção, metas de redução e aceite da equipe dependem da validação pelos responsáveis.
-
-## Estrutura
-
-- `index.html`: interface e estilos originais com ajustes pontuais de usabilidade.
-- `dashboard-model.js`: dados simulados, agregações e regras puras.
-- `dashboard.js`: atualização síncrona da interface e navegação.
-- `tests/`: regressão das regras e testes de interface.
-- `docs/Planejamento_EcoCondominio_IA.pdf`: planejamento original da atividade.
-- `docs/VALIDACAO_MVP_2026-10-29.md`: evidências da validação deste marco.
-
-## Exploração interativa
-Selecione 7, 14 ou 30 dias, ou Personalizado para aplicar datas entre 31/08 e 29/10/2026. Explore as 12 lixeiras com busca, filtros de tipo e situação. Clique em uma lixeira ou alerta para consultar ocupação, pico, volume e leituras diárias. Filtros afetam somente a lista; os indicadores permanecem globais. Intervalos sem histórico anterior completo não exibem comparação.
+- [Entrega 2 em PDF](docs/Entrega2_LPS_EcoCondominio_IA.pdf) — modelo de domínio, casos de uso, diagramas de sequência e contratos de operações.
+- [Planejamento original](docs/Planejamento_EcoCondominio_IA.pdf) e [validação do protótipo anterior](docs/VALIDACAO_MVP_2026-10-29.md).
+- `npm test` roda os testes do dashboard e do SQLite com o Node.js 24, sem dependências externas.
+- Para a suíte de interface existente, use `npm ci` e `npm run test:ui`. Ela usa Playwright e Chrome. Para usar o Edge, configure `BROWSER_CHANNEL=msedge`.

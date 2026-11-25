@@ -7,11 +7,67 @@
   const money = new Intl.NumberFormat('pt-BR', {
     style: 'currency', currency: 'BRL', maximumFractionDigits: 0,
   });
-  const levels = { critical: 'Crítico', high: 'Alto', review: 'Revisar' };
+  const levels = { critical: 'Crítico', high: 'Alto', review: 'Revisar', stale: 'Desatualizado' };
   const dialog = $('#route-dialog');
+  const pointDialog = $('#point-dialog');
+  const local = document.body.dataset.sqlite === 'true';
   let current;
   let selectedBin;
+  let periodRequest;
+  let history;
+  let state;
+  let busy = false;
   const collectionKey = 'ecocondominio.collections.v1';
+  const timestamp = value => new Date(value).toLocaleString('pt-BR');
+
+  async function request(path, data) {
+    const response = await fetch(path, data === undefined ? undefined : {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error);
+    return result;
+  }
+
+  function showState(updated) {
+    state = updated;
+    render(periodRequest, pointDialog.open);
+    renderCollections();
+  }
+
+  async function localOperation(status, operation) {
+    if (!state || busy) return;
+    busy = true;
+    status.textContent = '';
+    try {
+      await operation();
+    } catch (error) {
+      status.textContent = error.message || 'Não foi possível concluir a operação.';
+    } finally {
+      busy = false;
+    }
+  }
+
+  function useOperationalState(model) {
+    const live = new Map(state.points.map(point => [point.id, point]));
+    model.bins = model.bins.map(bin => {
+      const point = live.get(bin.id);
+      const reason = `Leitura de ${timestamp(point.at)} · ${point.sensorId} · capacidade de ${point.capacityL} L`;
+      let action = 'Manter monitoramento';
+      if (point.stale) action = 'Atualizar leitura simulada';
+      else if (point.level === 'critical') action = 'Coletar primeiro';
+      else if (point.level === 'high') action = 'Programar coleta';
+      return { ...bin, live: point, occupancy: point.occupancy, level: point.stale ? 'stale' : point.level || 'normal', reason, action };
+    });
+    model.alerts = model.bins.filter(bin => bin.live.level).map(bin => ({
+      ...bin,
+      level: bin.live.level,
+      reason: `${bin.occupancy}% de ocupação${bin.live.stale ? ' na última leitura · desatualizada' : ''}`,
+    })).sort((a, b) => b.occupancy - a.occupancy);
+    model.attentionCount = model.alerts.filter(alert => !alert.live.stale).length;
+  }
 
   function collectionRecords() {
     const records = JSON.parse(localStorage.getItem(collectionKey) || '[]');
@@ -23,11 +79,13 @@
     const list = $('#collection-list');
     list.replaceChildren();
     try {
-      const records = collectionRecords().reverse();
+      const records = local ? state.collections : collectionRecords().reverse();
       for (const record of records) {
-        list.append(element('li', '', `${record.name} · ${new Date(record.at).toLocaleString('pt-BR')}`));
+        const details = local ? ` · ${record.responsible} · ${record.previousOccupancy}% antes da coleta` : '';
+        list.append(element('li', '', `${record.name} · ${timestamp(record.at)}${details}`));
       }
-      $('#collection-status').textContent = records.length ? '' : 'Nenhuma coleta registrada neste navegador.';
+      $('#collection-status').textContent = records.length ? '' : local
+        ? 'Nenhuma coleta registrada nos últimos 90 dias.' : 'Nenhuma coleta registrada neste navegador.';
     } catch {
       $('#collection-status').textContent = 'O histórico local de coletas está indisponível.';
     }
@@ -36,8 +94,11 @@
   function renderForecast() {
     const list = $('#forecast-list');
     list.replaceChildren();
-    $('#forecast-context').textContent = `Estimativa simulada para o dia seguinte a ${date(current.end)}, usando até sete leituras.`;
+    $('#forecast-context').textContent = local
+      ? 'Estimativa para as próximas 24 horas com base na ocupação atual e na tendência simulada. Leituras desatualizadas ficam fora do cálculo exibido.'
+      : `Estimativa simulada para o dia seguinte a ${date(current.end)}, usando até sete leituras.`;
     const risks = current.bins.map(bin => {
+      if (local) return {bin, estimate: bin.live.stale ? 0 : bin.live.estimate};
       const readings = bin.history.slice(-7);
       const first = readings[0].occupancy;
       const dailyGrowth = Math.max(0, (bin.occupancy - first) / Math.max(1, readings.length - 1));
@@ -76,8 +137,10 @@
     return `${arrow} ${number.format(Math.abs(value))}${unit} vs. período anterior`;
   }
 
-  function render(period) {
-    const model = window.EcoDashboard.getDashboardModel(period);
+  function render(period, keepPoint = false) {
+    const model = window.EcoDashboard.getDashboardModel(period, history);
+    periodRequest = period;
+    if (local) useOperationalState(model);
     // Dismiss any recommendation from the previous snapshot before publishing the next.
     if (dialog.open) dialog.close();
     current = model;
@@ -85,8 +148,8 @@
     $('#period').value = model.selection;
     $('#custom-period').classList.toggle('hidden', model.selection !== 'custom');
     $('#start-date').value=model.start; $('#end-date').value=model.end;
-    if ($('#point-dialog').open) $('#point-dialog').close();
-    $('#period-range').textContent = `${date(model.start)} a ${date(model.end, true)} · demonstração`;
+    if (pointDialog.open && !keepPoint) pointDialog.close();
+    $('#period-range').textContent = `${date(model.start)} a ${date(model.end, true)} · ${local ? 'histórico simulado via SQLite' : 'demonstração'}`;
     $('#volume').textContent = `${number.format(model.volumeKg)} kg`;
     $('#recycle').textContent = `${number.format(model.recyclePercent)}%`;
     $('#saving').textContent = money.format(model.saving);
@@ -97,9 +160,10 @@
     $('#recycle-delta').title = comparison;
     $('#saving-detail').textContent = `${model.avoidedTrips} visitas evitadas × R$ 30 (simulação)`;
     $('#alerts').textContent = model.alerts.length;
-    $('#alert-summary').textContent = `${model.attentionCount} para coleta · ${model.alerts.length - model.attentionCount} para revisão`;
+    $('#alert-summary').textContent = `${model.attentionCount} para coleta · ${model.alerts.length - model.attentionCount} ${local ? 'desatualizados' : 'para revisão'}`;
     $('#alert-count').textContent = `${model.alerts.length} de ${model.pointCount}`;
-    $('#alert-sub').textContent = `Ocupação em ${date(model.end)} · padrões nos últimos ${model.period} dias`;
+    $('#alert-sub').textContent = local ? 'Últimas leituras operacionais · alerta a partir de 80%'
+      : `Ocupação em ${date(model.end)} · padrões nos últimos ${model.period} dias`;
     $('#chart-sub').textContent = model.period === 7
       ? 'Quilos coletados por dia · últimos 7 dias'
       : `Quilos coletados em ${model.chart.length} intervalos · ${model.period} dias (datas na tabela)`;
@@ -146,11 +210,14 @@
       row.append(icon, detail, element('span', `level${critical ? ' red' : ''}`, levels[alert.level]));
       alerts.append(row);
     });
-    if (!model.alerts.length) alerts.append(element('p', 'sub', 'Nenhum ponto exige atenção neste período.'));
+    if (!model.alerts.length) alerts.append(element('p', 'sub', local ? 'Nenhum alerta de ocupação ativo.' : 'Nenhum ponto exige atenção neste período.'));
     $('#alert-list').replaceChildren(alerts);
-    $('#route-summary').textContent = `${model.route.stops.length} pontos priorizados: coleta por ocupação, seguida de revisão dos padrões incomuns.`;
-    $('#routeBtn').disabled = !model.route.stops.length;
+    $('#route-summary').textContent = local ? 'Gere a rota com os níveis atuais e a previsão para 24 horas.'
+      : `${model.route.stops.length} pontos priorizados: coleta por ocupação, seguida de revisão dos padrões incomuns.`;
+    $('#routeBtn').disabled = !local && !model.route.stops.length;
+    if (local) $('#last-route').classList.toggle('hidden', !state.route);
     renderBins();
+    if (keepPoint && selectedBin) openPoint(model.bins.find(bin => bin.id === selectedBin.id));
     $('#update-status').textContent = `Visão de ${model.period} dias atualizada: ${number.format(model.volumeKg)} kg e ${model.alerts.length} alertas.`;
   }
 
@@ -178,9 +245,10 @@
     }
     const query=$('#bin-search').value.toLocaleLowerCase('pt-BR');
     const bins=current.bins.filter(b=>b.name.toLocaleLowerCase('pt-BR').includes(query)&&($('#bin-type').value==='all'||b.type===$('#bin-type').value)&&($('#bin-status').value==='all'||b.level===$('#bin-status').value));
-    bins.sort((a,b)=>({critical:0,high:1,review:2,normal:3}[a.level]-{critical:0,high:1,review:2,normal:3}[b.level])||b.occupancy-a.occupancy||a.id.localeCompare(b.id));
+    const rank = {critical:0,high:1,review:2,normal:3,stale:4};
+    bins.sort((a,b)=>(rank[a.level]-rank[b.level])||b.occupancy-a.occupancy||a.id.localeCompare(b.id));
     $('#bin-count').textContent=`${bins.length} de ${current.bins.length}`;
-    $('#bins-context').textContent=`Ocupação em ${date(current.end)} · volumes de ${range(current.start,current.end)}`;
+    $('#bins-context').textContent=`${local ? 'Ocupação atual' : 'Ocupação em ' + date(current.end)} · volumes de ${range(current.start,current.end)}`;
     $('#bin-list').replaceChildren();
     bins.forEach(b=>{const card=element('button','bin-card');card.dataset.id=b.id;card.type='button';card.append(element('strong','',b.name),element('p','',`${b.occupancy}% de ocupação · ${levels[b.level]||'Normal'}`),element('small','',`${number.format(b.volumeKg)} kg no período · Ver histórico`));card.onclick=()=>openPoint(b);$('#bin-list').append(card);});
     if(!bins.length){const empty=element('p','empty','Nenhuma lixeira encontrada. Limpe os filtros para ver todos os pontos.');empty.id='bins-empty';$('#bin-list').append(empty);}
@@ -188,7 +256,7 @@
   function openPoint(b){
     selectedBin = b;
     $('#point-collection-status').textContent = '';
-    $('#record-collection').disabled = false;
+    $('#record-collection').disabled = local && b.occupancy === 0;
     $('#point-title').textContent=b.name;$('#point-type').textContent=b.type;
     $('#point-period').textContent=`${range(current.start,current.end)} · ${current.period} dias`;
     $('#point-occupancy').textContent=b.occupancy+'%';$('#point-volume').textContent=number.format(b.volumeKg)+' kg';
@@ -196,8 +264,15 @@
     $('#point-reason').textContent=b.reason;$('#point-action').textContent=b.action;
     $('#point-history-table').replaceChildren();b.history.forEach(h=>{const row=element('tr');row.append(element('td','',date(h.date)),element('td','',number.format(h.kg)),element('td','',h.occupancy+'%'));$('#point-history-table').append(row);});
     renderHistory(b.history);
+    if (local) {
+      $('#reading-occupancy').value = b.occupancy;
+      const record = state.collections.find(item => item.pointId === b.id);
+      $('#point-last-collection').textContent = record
+        ? `Última coleta: ${timestamp(record.at)} · ${record.responsible}`
+        : 'Sem coletas registradas nos últimos 90 dias.';
+    }
     $('#point-dialog details').open=true;
-    $('#point-dialog').showModal();
+    if (!pointDialog.open) pointDialog.showModal();
   }
   function renderHistory(history) {
     const chart = $('#point-history');
@@ -238,7 +313,36 @@
       });
     });
   });
+
+  function showSavedRoute(route) {
+    const stops = route.stops.map(stop => {
+      const item = element('li');
+      item.dataset.id = stop.id;
+      const button = element('button', 'btn', stop.name);
+      button.type = 'button';
+      button.onclick = () => {
+        dialog.close();
+        openPoint(current.bins.find(bin => bin.id === stop.id));
+      };
+      const condition = stop.collectedAt ? 'Coleta registrada' : `${stop.occupancy}% na saída · previsão de ${stop.estimate}%`;
+      item.append(button, element('small', '', `${condition} · trecho de ${stop.leg} m`));
+      return item;
+    });
+    $('#route-stops').replaceChildren(...stops);
+    $('#route-context').textContent = `Saída sugerida na geração: ${timestamp(route.at)} · ${route.distance} m estimados`;
+    dialog.showModal();
+  }
+
   $('#routeBtn').addEventListener('click', () => {
+    if (local) {
+      const status = $('#route-message');
+      return localOperation(status, async () => {
+        const { route, state: updated } = await request('/api/routes', {});
+        showState(updated);
+        if (route) showSavedRoute(route);
+        else status.textContent = 'Nenhum ponto precisa de coleta prioritária agora.';
+      });
+    }
     const stops = document.createDocumentFragment();
     // Mapa fictício com corredores ortogonais de 15 m entre pontos.
     let position = {x: 0, y: 0};
@@ -261,6 +365,18 @@
 
   $('#record-collection').onclick = () => {
     if (!selectedBin) return;
+    if (local) {
+      const pointId = selectedBin.id;
+      const responsible = $('#collection-responsible');
+      if (!responsible.reportValidity()) return;
+      return localOperation($('#point-collection-status'), async () => {
+        const updated = await request('/api/collections', { pointId, responsible: responsible.value });
+        showState(updated);
+        if (pointDialog.open && selectedBin.id === pointId) {
+          $('#point-collection-status').textContent = 'Coleta registrada. Ocupação atualizada para 0%.';
+        }
+      });
+    }
     try {
       const records = collectionRecords();
       records.push({id: selectedBin.id, name: selectedBin.name, at: new Date().toISOString()});
@@ -272,6 +388,55 @@
       $('#point-collection-status').textContent = 'Não foi possível gravar a coleta neste navegador.';
     }
   };
-  render($('#period').value);
-  renderCollections();
+
+  if (local) {
+    $('#route-heading').textContent = 'Planejar rota de coleta';
+    $('#routeBtn').textContent = 'Gerar rota de coleta';
+    $('#routeBtn').disabled = true;
+    $('#period').disabled = true;
+    $('#last-route').onclick = () => showSavedRoute(state.route);
+    $('#refresh-readings').onclick = () => localOperation($('#sensor-status'), async () => {
+      showState(await request('/api/readings/refresh', {}));
+      $('#sensor-status').textContent = 'Horários das leituras simuladas atualizados.';
+    });
+    $('#reading-form').onsubmit = event => {
+      event.preventDefault();
+      const point = selectedBin.live;
+      const occupancy = $('#reading-occupancy').valueAsNumber;
+      return localOperation($('#point-collection-status'), async () => {
+        showState(await request('/api/readings', { sensorId: point.sensorId, occupancy }));
+        if (pointDialog.open && selectedBin.id === point.id) {
+          $('#point-collection-status').textContent = 'Leitura simulada registrada.';
+        }
+      });
+    };
+    const status = $('#route-message');
+    status.textContent = 'Carregando dados do SQLite…';
+    request('/api/initial').then(initial => {
+      history = initial.history;
+      periodRequest = $('#period').value;
+      showState(initial.state);
+      $('#period').disabled = false;
+      $('#refresh-readings').disabled = false;
+      status.textContent = '';
+      setInterval(async () => {
+        if (busy || dialog.open || pointDialog.open || document.hidden ||
+            $('#custom-period').contains(document.activeElement)) return;
+        const previous = state;
+        try {
+          const updated = await request('/api/state');
+          if (!busy && state === previous && !dialog.open && !pointDialog.open &&
+              !$('#custom-period').contains(document.activeElement) &&
+              JSON.stringify(updated) !== JSON.stringify(previous)) showState(updated);
+        } catch {
+          // Deixe o último estado visível e tente de novo no próximo intervalo.
+        }
+      }, 20_000);
+    }).catch(() => {
+      status.textContent = 'Não foi possível carregar o SQLite. Confira o terminal e recarregue a página.';
+    });
+  } else {
+    render($('#period').value);
+    renderCollections();
+  }
 })();
